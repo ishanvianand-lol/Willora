@@ -1,4 +1,3 @@
-// src/components/Register.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,6 +10,8 @@ const Register = () => {
   });
 
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false); // ✅ NEW
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -19,6 +20,8 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
+    setLoading(true); // ✅ start loading
 
     try {
       const res = await fetch('http://localhost:5000/api/auth/register', {
@@ -31,10 +34,12 @@ const Register = () => {
 
       if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-      alert('Registered successfully!');
-      navigate('/login');
+      setSuccess('Registered successfully! Redirecting to home...');
+      setTimeout(() => navigate('/'), 2000);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false); // ✅ stop loading
     }
   };
 
@@ -45,6 +50,7 @@ const Register = () => {
         className="bg-white shadow-md rounded-xl p-8 w-full max-w-md"
       >
         <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+
         <input
           type="text"
           name="name"
@@ -54,6 +60,7 @@ const Register = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="email"
           name="email"
@@ -63,6 +70,7 @@ const Register = () => {
           onChange={handleChange}
           required
         />
+
         <input
           type="password"
           name="password"
@@ -72,12 +80,18 @@ const Register = () => {
           onChange={handleChange}
           required
         />
+
         {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+        {success && <p className="text-green-500 text-sm mb-2">{success}</p>}
+
         <button
           type="submit"
-          className="bg-sky-500 text-white px-4 py-2 rounded hover:bg-sky-600 w-full"
+          disabled={loading} // ✅
+          className={`${
+            loading ? 'bg-sky-300 cursor-not-allowed' : 'bg-sky-500 hover:bg-sky-600'
+          } text-white px-4 py-2 rounded w-full transition`}
         >
-          Register
+          {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
     </div>

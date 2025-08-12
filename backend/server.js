@@ -4,7 +4,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 
 import authRoutes from './routes/auth.js';
-import journalRoutes from './routes/journal.js';
 
 dotenv.config();
 
@@ -16,7 +15,6 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/journal', journalRoutes);
 
 // Root
 app.get('/', (req, res) => {

@@ -1,11 +1,11 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import HomePage from '../components/HomePage';
-import Register from '../components/Register';
-import Login from '../components/Login';
-import JournalPage from '../components/JournalPage';
-import AIChatPage from '../components/AIChatPage';
+import Navbar from '../src/components/Navbar';
+import HomePage from '../src/components/HomePage';
+import Register from '../src/components/Register';
+import Login from '../src/components/Login';
+import JournalPage from '../src/components/JournalPage';
+import AIChatPage from '../src/components/AIChatPage';
 
 const App = () => {
   return (

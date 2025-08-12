@@ -8,25 +8,27 @@ export const register = async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: 'User already exists' });
+    // Basic validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
 
-    // Hash password
+    const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
     const newUser = new User({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       password: hashedPassword,
     });
 
     await newUser.save();
 
-    // Create token
     const token = jwt.sign(
       { id: newUser._id },
       process.env.JWT_SECRET,
@@ -37,6 +39,7 @@ export const register = async (req, res) => {
 
     res.status(201).json({ user: userData, token });
   } catch (err) {
+    console.error('Register error:', err.message);
     res.status(500).json({ message: 'Server error during registration' });
   }
 };
@@ -46,17 +49,20 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Find user
-    const user = await User.findOne({ email });
-    if (!user)
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }
 
-    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
+    }
 
-    // Create token
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
@@ -67,6 +73,7 @@ export const login = async (req, res) => {
 
     res.status(200).json({ user: userData, token });
   } catch (err) {
+    console.error('Login error:', err.message);
     res.status(500).json({ message: 'Server error during login' });
   }
 };

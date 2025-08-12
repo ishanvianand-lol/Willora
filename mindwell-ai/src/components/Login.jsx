@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { LogIn } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import AuthContext from '../src/context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom'; // ✅ use Link instead of <a>
+import AuthContext from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -22,15 +22,20 @@ const Login = () => {
       });
 
       const data = await res.json();
+      console.log('Login response:', data);
 
       if (!res.ok) {
         throw new Error(data.message || 'Login failed');
       }
 
-      login(data.user, data.token); // Save user/token in context & localStorage
-      navigate('/dashboard');
+      if (!data.user || !data.token) {
+        throw new Error('Invalid response from server');
+      }
+
+      login(data.user, data.token);
+      navigate('/'); // ✅ Redirect after login
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Something went wrong');
     }
   };
 
@@ -52,8 +57,10 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email" // ✅ helps with autofill
             />
           </div>
+
           <div>
             <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
               Password
@@ -66,6 +73,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password" // ✅ helps with autofill
             />
           </div>
 
@@ -76,6 +84,7 @@ const Login = () => {
           <button
             type="submit"
             className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200 ease-in-out transform hover:scale-105"
+            aria-label="Login"
           >
             <LogIn className="inline-block w-5 h-5 mr-2" /> Login
           </button>
@@ -83,9 +92,9 @@ const Login = () => {
 
         <p className="text-center text-gray-600 text-sm mt-6">
           Don't have an account?{' '}
-          <a href="/register" className="text-pink-500 hover:underline font-semibold">
+          <Link to="/register" className="text-pink-500 hover:underline font-semibold">
             Sign Up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

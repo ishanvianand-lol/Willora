@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { sendMessageToAI } from '../api/chatApi.js';
+import { sendMessageToAI } from '../../api/chatApi.js';
 import { Loader2, Send } from 'lucide-react';
 
 const AIChatPage = () => {
