@@ -1,99 +1,142 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import AuthContext from "../context/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
+  const { login } = useContext(AuthContext); // use context
 
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false); // ✅ NEW
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true); // ✅ start loading
+    setError("");
+    setLoading(true);
+
+    // Trim inputs
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedConfirm = confirmPassword.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedPassword || !trimmedConfirm) {
+      setError("Please fill all fields");
+      setLoading(false);
+      return;
+    }
+
+    if (trimmedPassword !== trimmedConfirm) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+      const res = await axios.post("http://localhost:5000/api/auth/register", {
+        name: trimmedName,
+        email: trimmedEmail,
+        password: trimmedPassword,
       });
 
-      const data = await res.json();
+      const { token, user } = res.data;
 
-      if (!res.ok) throw new Error(data.message || 'Registration failed');
+      // Update context (reactive)
+      login(user, token);
 
-      setSuccess('Registered successfully! Redirecting to home...');
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate("/"), 500);
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false); // ✅ stop loading
+      console.error(err);
+      setError(err.response?.data?.message || "Something went wrong. Please try again.");
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-md rounded-xl p-8 w-full max-w-md"
-      >
-        <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-
-        <input
-          type="text"
-          name="name"
-          placeholder="Name"
-          className="w-full mb-4 p-2 border rounded"
-          value={form.name}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          className="w-full mb-4 p-2 border rounded"
-          value={form.email}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="w-full mb-4 p-2 border rounded"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-        {success && <p className="text-green-500 text-sm mb-2">{success}</p>}
-
-        <button
-          type="submit"
-          disabled={loading} // ✅
-          className={`${
-            loading ? 'bg-sky-300 cursor-not-allowed' : 'bg-sky-500 hover:bg-sky-600'
-          } text-white px-4 py-2 rounded w-full transition`}
-        >
-          {loading ? 'Registering...' : 'Register'}
-        </button>
-      </form>
+    <div
+      className="flex items-center justify-center min-h-screen font-sans"
+      style={{
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1694861786917-b53dd8a86ea6?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-xl p-10 w-full max-w-md text-white">
+        <h2 className="text-3xl font-bold mb-6 text-center">Create Account</h2>
+        {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
+        <form onSubmit={handleRegister} className="space-y-4">
+          <div>
+            <label className="block mb-1">Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-80 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7a6c57]"
+              placeholder="Your Name"
+            />
+          </div>
+          <div>
+            <label className="block mb-1">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-80 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7a6c57]"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div>
+            <label className="block mb-1">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-80 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7a6c57]"
+              placeholder="********"
+            />
+          </div>
+          <div>
+            <label className="block mb-1">Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={loading}
+              className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-80 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7a6c57]"
+              placeholder="********"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-[#7a6c57] rounded-lg font-semibold hover:bg-[#635843] transition mt-4 flex justify-center items-center"
+          >
+            {loading ? "Signing up..." : "Sign Up"}
+          </button>
+        </form>
+        <p className="text-center mt-4 text-gray-200">
+          Already have an account?{" "}
+          <span
+            onClick={() => navigate("/login")}
+            className="text-[#c9a17a] hover:underline cursor-pointer"
+          >
+            Login
+          </span>
+        </p>
+      </div>
     </div>
   );
 };

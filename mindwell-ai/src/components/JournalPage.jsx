@@ -1,70 +1,88 @@
-import React, { useState } from 'react';
-import AIChatBox from './AIChatPage';
+import React, { useState } from "react";
+
+const moods = ["😊", "😔", "😡", "😱", "😴", "❤️"];
 
 const JournalPage = () => {
-  const [entry, setEntry] = useState('');
-  const [mood, setMood] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [entry, setEntry] = useState("");
+  const [mood, setMood] = useState("");
+  const [entries, setEntries] = useState([]);
 
-  const handleSave = () => {
-    if (!entry.trim()) return;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!entry || !mood) return;
 
-    // You can later connect this to your backend
-    console.log('Saved entry:', { entry, mood, date: new Date() });
+    const newEntry = {
+      id: Date.now(),
+      text: entry,
+      mood,
+      date: new Date().toLocaleString(),
+    };
 
-    setSuccess(true);
-    setEntry('');
-    setMood('');
-
-    setTimeout(() => setSuccess(false), 3000);
+    setEntries([newEntry, ...entries]);
+    setEntry("");
+    setMood("");
   };
 
   return (
-    <div className="min-h-screen bg-emerald-50 px-6 py-12">
-      <div className="max-w-3xl mx-auto bg-white shadow-md rounded-md p-6 md:p-10">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">📝 Daily Journal</h2>
-        
-        <label className="block text-gray-600 text-sm mb-2">How are you feeling today?</label>
-        <select
-          value={mood}
-          onChange={(e) => setMood(e.target.value)}
-          className="mb-4 bg-white w-full border border-pink-200 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-300"
-        >
-            <option value="">Select mood</option>
-            <option value="😊">😊 Happy</option>
-            <option value="😔">😔 Sad</option>
-            <option value="😠">😠 Angry</option>
-            <option value="😌">😌 Calm</option>
-            <option value="😰">😰 Anxious</option>
-            <option value="😄">😄 Grateful</option>
-            <option value="🤯">🤯 Overwhelmed</option>
-            <option value="💪">💪 Motivated</option>
-            <option value="😴">😴 Tired</option>
-        </select>
+    <div className="min-h-screen bg-[#f0ede5] m-50 font-sans">
+      <h1 className="text-3xl md:text-4xl font-bold text-[#7a6c57] mb-6 text-center">
+        Your Journal
+      </h1>
 
-        <label className="block text-gray-600 text-sm mb-2">Write your thoughts</label>
-        <textarea
-          rows="6"
-          value={entry}
-          onChange={(e) => setEntry(e.target.value)}
-          className="w-full bg-white text-gray-800 border border-pink-200 rounded-md p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-pink-300"
-          placeholder="Type here..."
-        />
+      {/* New Entry */}
+      <div className="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-md mb-10">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <textarea
+            className="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c9a17a]"
+            placeholder="Write your thoughts..."
+            value={entry}
+            onChange={(e) => setEntry(e.target.value)}
+            rows={5}
+          />
 
-        <button
-          onClick={handleSave}
-          className="bg-pink-400 text-white px-5 py-2 rounded-full text-sm hover:bg-pink-500 transition"
-        >
-          Save Entry
-        </button>
-
-        {success && (
-          <div className="mt-4 text-green-600 text-sm">
-            ✔️ Your journal entry has been saved!
+          <div className="flex gap-3 flex-wrap">
+            {moods.map((m) => (
+              <button
+                type="button"
+                key={m}
+                onClick={() => setMood(m)}
+                className={`px-4 py-2 rounded-lg border ${
+                  mood === m ? "bg-[#c9a17a] text-white" : "bg-white"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
           </div>
-        )}
+
+          <button
+            type="submit"
+            className="w-full bg-[#7a6c57] text-white py-3 rounded-lg font-semibold hover:bg-[#635843] transition"
+          >
+            Save Entry
+          </button>
+        </form>
       </div>
-    </div> 
+
+      {/* Past Entries */}
+      <div className="max-w-xl mx-auto space-y-6">
+        {entries.length === 0 && (
+          <p className="text-center text-gray-600">No entries yet.</p>
+        )}
+        {entries.map((e) => (
+          <div
+            key={e.id}
+            className="bg-white p-4 rounded-xl shadow-md border-l-4 border-[#c9a17a]"
+          >
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xl">{e.mood}</span>
+              <span className="text-sm text-gray-500">{e.date}</span>
+            </div>
+            <p className="text-gray-800">{e.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

@@ -1,100 +1,106 @@
-import { useState, useContext } from 'react';
-import { LogIn } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom'; // ✅ use Link instead of <a>
-import AuthContext from '../context/AuthContext';
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import AuthContext from "../context/AuthContext";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const handleSubmit = async (e) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
+    setLoading(true);
+
+    // Trim inputs
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setError("Please fill all fields");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email: trimmedEmail,
+        password: trimmedPassword,
       });
 
-      const data = await res.json();
-      console.log('Login response:', data);
+      const { user, token } = res.data;
 
-      if (!res.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
+      // Update context (reactive)
+      login(user, token);
 
-      if (!data.user || !data.token) {
-        throw new Error('Invalid response from server');
-      }
-
-      login(data.user, data.token);
-      navigate('/'); // ✅ Redirect after login
+      // Redirect to homepage after a short delay
+      setTimeout(() => navigate("/"), 500);
     } catch (err) {
-      setError(err.message || 'Something went wrong');
+      console.error(err);
+      setError(err.response?.data?.message || "Something went wrong. Please try again.");
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-150px)] bg-gray-100 p-4">
-      <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Login</h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div
+      className="flex items-center justify-center min-h-screen font-sans"
+      style={{
+        backgroundImage:
+          "url('https://images.unsplash.com/photo-1633210155534-e43f00c1d627?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-xl p-10 w-full max-w-md text-white">
+        <h2 className="text-3xl font-bold mb-6 text-center">Login</h2>
+        {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-gray-700 text-sm font-bold mb-2">
-              Email Address
-            </label>
+            <label className="block mb-1">Email</label>
             <input
               type="email"
-              id="email"
-              className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="your@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email" // ✅ helps with autofill
+              disabled={loading}
+              className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-80 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7a6c57]"
+              placeholder="you@example.com"
             />
           </div>
-
           <div>
-            <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
-              Password
-            </label>
+            <label className="block mb-1">Password</label>
             <input
               type="password"
-              id="password"
-              className="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password" // ✅ helps with autofill
+              disabled={loading}
+              className="w-full px-4 py-2 rounded-lg bg-white bg-opacity-80 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#7a6c57]"
+              placeholder="********"
             />
           </div>
-
-          {error && (
-            <p className="text-red-500 text-sm font-medium">{error}</p>
-          )}
-
           <button
             type="submit"
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200 ease-in-out transform hover:scale-105"
-            aria-label="Login"
+            disabled={loading}
+            className="w-full py-3 bg-[#7a6c57] rounded-lg font-semibold hover:bg-[#635843] transition mt-4 flex justify-center items-center"
           >
-            <LogIn className="inline-block w-5 h-5 mr-2" /> Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
-
-        <p className="text-center text-gray-600 text-sm mt-6">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-pink-500 hover:underline font-semibold">
+        <p className="text-center mt-4 text-gray-200">
+          Don't have an account?{" "}
+          <span
+            onClick={() => navigate("/register")}
+            className="text-[#c9a17a] hover:underline cursor-pointer"
+          >
             Sign Up
-          </Link>
+          </span>
         </p>
       </div>
     </div>
