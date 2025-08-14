@@ -52,12 +52,12 @@ const Login = () => {
       className="flex items-center justify-center min-h-screen font-sans"
       style={{
         backgroundImage:
-          "url('https://images.unsplash.com/photo-1633210155534-e43f00c1d627?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+          "url('https://images.unsplash.com/photo-1694861786917-b53dd8a86ea6?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
     >
-      <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-xl p-10 w-full max-w-md text-white">
+      <div className="bg-black bg-opacity-50 backdrop-blur-sm rounded-xl p-10 w-full max-w-md text-white">
         <h2 className="text-3xl font-bold mb-6 text-center">Login</h2>
         {error && <p className="text-red-400 mb-4 text-center">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">

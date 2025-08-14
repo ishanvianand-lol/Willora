@@ -1,12 +1,28 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState } from "react";
 
+// Create the context
 const AuthContext = createContext();
 
+// Provider component
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")) || null);
-  const [token, setToken] = useState(() => localStorage.getItem("token") || "");
+  // Initialize from localStorage if available, otherwise defaults
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || null;
+    } catch {
+      return null;
+    }
+  });
 
-  // login updates context + localStorage
+  const [token, setToken] = useState(() => {
+    try {
+      return localStorage.getItem("token") || "";
+    } catch {
+      return "";
+    }
+  });
+
+  // Login function
   const login = (userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
@@ -14,6 +30,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("token", jwtToken);
   };
 
+  // Logout function
   const logout = () => {
     setUser(null);
     setToken("");

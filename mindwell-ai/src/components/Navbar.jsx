@@ -2,12 +2,13 @@ import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import AuthContext from "../context/AuthContext";
-import JournalPage from "./JournalPage";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const closeMenu = () => setIsOpen(false);
 
   return (
     <nav className="fixed w-full z-50">
@@ -19,10 +20,10 @@ const Navbar = () => {
 
         {/* Desktop Links */}
         <div className="hidden md:flex space-x-6 items-center text-white">
-          <Link to="/" className="hover:text-[#f2e8d5] transition">Home</Link>
-          <Link to="/features" className="hover:text-[#f2e8d5] transition">Features</Link>
           <Link to="/journal" className="hover:text-[#f2e8d5] transition">Journal</Link>
-          <Link to="/contact" className="hover:text-[#f2e8d5] transition">Contact</Link>
+          <Link to="/community" className="hover:text-[#f2e8d5] transition">Community</Link>
+          <Link to="/insights" className="hover:text-[#f2e8d5] transition">Insights</Link>
+          <Link to="/ai-bot" className="hover:text-[#f2e8d5] transition">AI Bot</Link>
 
           {user ? (
             <button
@@ -57,16 +58,17 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-black bg-opacity-30 backdrop-blur-sm px-6 py-4 space-y-3 text-white">
-          <Link to="/" className="block hover:text-[#f2e8d5] transition">Home</Link>
-          <Link to="/features" className="block hover:text-[#f2e8d5] transition">Features</Link>
-          <Link to="/about" className="block hover:text-[#f2e8d5] transition">About</Link>
-          <Link to="/contact" className="block hover:text-[#f2e8d5] transition">Contact</Link>
+          <Link to="/journal" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">Journal</Link>
+          <Link to="/community" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">Community</Link>
+          <Link to="/insights" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">Insights</Link>
+          <Link to="/ai-bot" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">AI Bot</Link>
 
           {user ? (
             <button
               onClick={() => {
                 logout();
                 navigate("/");
+                closeMenu();
               }}
               className="block px-4 py-2 bg-[#c9a17a] rounded-lg hover:bg-[#b28e63] transition"
             >
@@ -74,10 +76,10 @@ const Navbar = () => {
             </button>
           ) : (
             <>
-              <Link to="/login" className="block px-4 py-2 bg-[#7a6c57] rounded-lg hover:bg-[#635843] transition">
+              <Link to="/login" onClick={closeMenu} className="block px-4 py-2 bg-[#7a6c57] rounded-lg hover:bg-[#635843] transition">
                 Login
               </Link>
-              <Link to="/register" className="block px-4 py-2 bg-[#c9a17a] rounded-lg hover:bg-[#b28e63] transition">
+              <Link to="/register" onClick={closeMenu} className="block px-4 py-2 bg-[#c9a17a] rounded-lg hover:bg-[#b28e63] transition">
                 Sign Up
               </Link>
             </>
