@@ -1,18 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import AuthContext from "../context/AuthContext.jsx";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
 const moods = ["😊", "😔", "😡", "😱", "😴", "❤"];
 
 const JournalPage = () => {
+  const { user } = useContext(AuthContext); // get logged-in user
+  const navigate = useNavigate();
+
   const [entry, setEntry] = useState("");
   const [mood, setMood] = useState("");
   const [entries, setEntries] = useState([]);
   const [aiResult, setAiResult] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [showLoginAlert, setShowLoginAlert] = useState(false); // for in-app alert
 
+  // Save Entry handler
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!user) return setShowLoginAlert(true); // show alert if not logged in
     if (!entry || !mood) return;
 
     const newEntry = {
@@ -20,7 +28,7 @@ const JournalPage = () => {
       text: entry,
       mood,
       date: new Date().toLocaleString(),
-      dateOnly: new Date().toDateString(), // for filtering
+      dateOnly: new Date().toDateString(),
     };
 
     setEntries([newEntry, ...entries]);
@@ -29,24 +37,51 @@ const JournalPage = () => {
     setAiResult(null);
   };
 
+  // AI Analyze handler
   const handleAiAnalyze = () => {
+    if (!user) return setShowLoginAlert(true); // show alert if not logged in
     if (!entry) return alert("Please write something to analyze.");
+
     setAiResult({
       mood: "Calm & Reflective 😌",
       suggestions: [
         "Take a short walk to clear your mind.",
         "Write down 3 things you’re grateful for today.",
-        "Listen to calming instrumental music."
-      ]
+        "Listen to calming instrumental music.",
+      ],
     });
   };
 
+  // Filter entries by selected date
   const filteredEntries = selectedDate
     ? entries.filter((e) => e.dateOnly === selectedDate.toDateString())
     : entries;
 
   return (
     <div className="min-h-screen bg-[#f0ede5] p-6 pt-20 font-sans">
+      {/* In-app login alert */}
+      {showLoginAlert && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-sm text-center shadow-lg">
+            <h2 className="text-lg font-semibold text-[#7a6c57] mb-4">
+              Please login to fully access the website
+            </h2>
+            <button
+              onClick={() => navigate("/login")}
+              className="bg-[#7a6c57] text-white py-2 px-4 rounded-lg font-semibold hover:bg-[#635843] transition"
+            >
+              Go to Login Page
+            </button>
+            <button
+              onClick={() => setShowLoginAlert(false)}
+              className="mt-3 text-gray-500 underline text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-4xl font-bold text-[#7a6c57] mb-8 text-center">
         Your Journal
       </h1>
@@ -87,14 +122,22 @@ const JournalPage = () => {
               <div className="flex gap-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-[#7a6c57] text-white py-3 rounded-lg font-semibold hover:bg-[#635843] transition"
+                  className={`flex-1 py-3 rounded-lg font-semibold transition ${
+                    user
+                      ? "bg-[#7a6c57] text-white hover:bg-[#635843]"
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
                 >
                   Save Entry
                 </button>
                 <button
                   type="button"
                   onClick={handleAiAnalyze}
-                  className="flex-1 bg-[#c9a17a] text-white py-3 rounded-lg font-semibold hover:bg-[#b38a65] transition"
+                  className={`flex-1 py-3 rounded-lg font-semibold transition ${
+                    user
+                      ? "bg-[#c9a17a] text-white hover:bg-[#b38a65]"
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
                 >
                   Analyse with AI
                 </button>
