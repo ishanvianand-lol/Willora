@@ -12,18 +12,18 @@ const Navbar = () => {
 
   return (
     <nav className="fixed w-full z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center bg-black bg-opacity-20 backdrop-blur-sm">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center bg-orange-100 bg-opacity-100 backdrop-blur-sm">
         {/* Logo */}
-        <Link to="/" className="text-2xl font-extrabold font-sans text-white">
+        <Link to="/" className="text-2xl font-extrabold font-sans text-lime-900 ">
           Willora
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden md:flex space-x-6 items-center text-white">
-          <Link to="/journal" className="hover:text-[#f2e8d5] transition">Journal</Link>
-          <Link to="/community" className="hover:text-[#f2e8d5] transition">Community</Link>
-          <Link to="/insights" className="hover:text-[#f2e8d5] transition">Insights</Link>
-          <Link to="/ai-bot" className="hover:text-[#f2e8d5] transition">AI Bot</Link>
+        <div className="hidden md:flex space-x-6 font-semibold items-center text-black">
+          <Link to="/journal" className="hover:text-orange-950 transition">Journal</Link>
+          <Link to="/community" className="hover:text-orange-950 transition">Community</Link>
+          <Link to="/insights" className="hover:text-orange-950 transition">Insights</Link>
+          <Link to="/ai-bot" className="hover:text-orange-950 transition">AI Bot</Link>
 
           {user ? (
             <button
@@ -48,7 +48,7 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Hamburger */}
-        <div className="md:hidden text-white">
+        <div className="md:hidden text-lime-900">
           <button onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -58,10 +58,10 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-black bg-opacity-30 backdrop-blur-sm px-6 py-4 space-y-3 text-white">
-          <Link to="/journal" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">Journal</Link>
-          <Link to="/community" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">Community</Link>
-          <Link to="/insights" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">Insights</Link>
-          <Link to="/ai-bot" onClick={closeMenu} className="block hover:text-[#f2e8d5] transition">AI Bot</Link>
+          <Link to="/journal" onClick={closeMenu} className="block hover:text-orange-950 transition">Journal</Link>
+          <Link to="/community" onClick={closeMenu} className="block hover:text-orange-950 transition">Community</Link>
+          <Link to="/insights" onClick={closeMenu} className="block hover:text-orange-950 transition">Insights</Link>
+          <Link to="/ai-bot" onClick={closeMenu} className="block hover:text-orange-950 transition">AI Bot</Link>
 
           {user ? (
             <button

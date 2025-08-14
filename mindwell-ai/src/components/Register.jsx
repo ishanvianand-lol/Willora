@@ -49,7 +49,7 @@ const Register = () => {
       // Update context (reactive)
       login(user, token);
 
-      setTimeout(() => navigate("/"), 500);
+      setTimeout(() => navigate("/login"), 500);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || "Something went wrong. Please try again.");

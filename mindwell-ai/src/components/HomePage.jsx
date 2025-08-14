@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthContext from "../context/AuthContext.jsx"; // adjust path if needed
+// import "font.css";
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const Homepage = () => {
         backgroundPosition: "center",
       }}
     >
-      <div className="flex flex-col min-h-screen bg-black bg-opacity-30">
+      <div class="root-hehe" className="flex flex-col min-h-screen bg-black bg-opacity-30">
         {/* Hero Section */}
         <section className="flex flex-col-reverse md:flex-row items-center justify-between px-6 md:px-20 py-20 md:py-32">
           <div className="md:w-1/2 space-y-6 text-center md:text-left text-white">
@@ -71,7 +72,7 @@ const Homepage = () => {
             <img
               src="/public/willora.png"
               alt="Willora illustration"
-              className="w-32 rounded-xl shadow-lg mix-blend-lighten opacity-80"
+              className="w-32 rounded-xl shadow-lg mix-blend-darken opacity-80"
             />
           </div>
         </section>

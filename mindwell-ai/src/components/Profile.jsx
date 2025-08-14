@@ -1,168 +1,88 @@
-import React, { useContext, useState, useEffect } from "react";
-import AuthContext from "../context/AuthContext";
-import axios from "axios";
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   Tooltip,
-//   ResponsiveContainer,
-//   CartesianGrid,
-// } from "recharts";
+import React, { useState, useEffect } from "react";
+import { FaUserCircle } from "react-icons/fa";
+import { ResponsiveContainer, LineChart, Line } from "recharts";
 
-const themes = ["Earthy", "Rosy", "Dark", "Light"];
-
-const defaultAvatar =
-  "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_placeholder.png";
-
-const Profile = () => {
-  const { user, setUser, token } = useContext(AuthContext);
-
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [avatar, setAvatar] = useState(user?.avatar || "");
-  const [theme, setTheme] = useState(user?.theme || "Earthy");
-  const [message, setMessage] = useState("");
+/**
+ * Playful Willora Profile Component
+ */
+const Profile = ({ userName = "Your Name", joinDate = new Date() }) => {
+  // Example mood data (1-5 scale)
   const [moodData, setMoodData] = useState([]);
+  const [randomMessage, setRandomMessage] = useState("");
+  const [moodEmoji, setMoodEmoji] = useState("🙂");
 
-  // Fetch mood data safely
+  const progressMessages = [
+    "Fantastic! You've taken another step towards your goals today.",
+    "Celebrate your small achievements. Your progress is inspiring!",
+    "Remember, every day is a new beginning. Be proud of your progress!",
+    "Your consistency is your strength. Keep moving forward.",
+    "This journey is yours. We're here to support you every step of the way.",
+  ];
+
+  const moodEmojis = ["😄", "😊", "😌", "🙂", "🤗"];
+
+  // Generate random mood data for the last 7 days
   useEffect(() => {
-    const fetchMood = async () => {
-      try {
-        const res = await axios.get("/api/journal/moods", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+    const data = Array.from({ length: 7 }, (_, i) => ({
+      day: `Day ${i + 1}`,
+      mood: Math.floor(Math.random() * 5) + 1,
+    }));
+    setMoodData(data);
 
-        let data = res.data;
-        if (!Array.isArray(data)) {
-          data = Object.entries(data).map(([date, mood]) => ({ date, mood }));
-        }
+    setRandomMessage(
+      progressMessages[Math.floor(Math.random() * progressMessages.length)]
+    );
+    setMoodEmoji(moodEmojis[Math.floor(Math.random() * moodEmojis.length)]);
+  }, []);
 
-        setMoodData(data);
-      } catch (err) {
-        console.log("Error fetching mood data", err);
-        setMoodData([]);
-      }
-    };
-
-    if (token) fetchMood();
-  }, [token]);
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.put(
-        "/api/auth/update",
-        { name, email, avatar, theme },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setUser(res.data.user);
-      setMessage("Profile updated successfully!");
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Update failed");
-    }
-  };
+  const formattedDate = new Date(joinDate).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center p-4">
-      <div className="relative w-full max-w-4xl bg-white shadow-xl rounded-2xl overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80"
-            alt="Profile Background"
-            className="w-full h-full object-cover filter brightness-50"
-          />
+    <div className="min-h-screen flex items-center justify-center p-4"
+         style={{ background: "linear-gradient(to bottom, #f6ecd9, #c9a17a)" }}>
+      <div className="bg-white bg-opacity-80 rounded-2xl shadow-xl p-6 sm:p-8 md:p-10 w-full max-w-sm sm:max-w-md lg:max-w-lg animate-fadeIn">
+        
+        {/* Profile Header */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-[#a1866f] to-[#d1bfa7] flex items-center justify-center text-white text-5xl shadow-lg transition-transform hover:scale-105">
+            <FaUserCircle />
+            <span className="absolute -bottom-1 -right-1 text-2xl">{moodEmoji}</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-[#7a6c57] mt-4 mb-1">
+            {userName}
+          </h1>
+          <p className="text-sm sm:text-base text-[#5c4d3d]">
+            Joined: {formattedDate}
+          </p>
         </div>
 
-        {/* Content */}
-        <div className="relative z-10 p-8 text-gray-100 flex flex-col gap-8">
-          {/* Profile Header */}
-          <div className="flex flex-col items-center">
-            <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center overflow-hidden border-4 border-emerald-400 mb-4">
-              <img
-                src={avatar || defaultAvatar}
-                alt="User Avatar"
-                className="w-24 h-24 object-contain"
-              />
-            </div>
-            <h2 className="text-3xl font-semibold text-emerald-400 mb-1">
-              {user?.name || "Your Name"}
-            </h2>
-            <p className="text-lg text-gray-200 mb-4">
-              {user?.email || "email@example.com"}
-            </p>
+        {/* Animated Progress */}
+        <div className="text-center mb-6">
+          <h2 className="text-xl sm:text-2xl font-semibold text-[#7a6c57] mb-4">
+            Your Progress
+          </h2>
+          <div className="bg-[#ede3d8] border border-[#d6c6ad] rounded-lg p-4 sm:p-5 text-[#5c4d3d] leading-relaxed text-sm sm:text-base shadow-md animate-pulse">
+            {randomMessage}
           </div>
-
-          {/* Update Profile Form */}
-          <form
-            onSubmit={handleUpdate}
-            className="flex flex-col gap-4 bg-white bg-opacity-30 rounded-xl p-6 text-gray-900"
-          >
-            <h3 className="text-xl font-semibold mb-2 text-gray-800">Edit Profile</h3>
-            <input
-              type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="p-2 rounded-md border border-gray-300"
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="p-2 rounded-md border border-gray-300"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Avatar URL"
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              className="p-2 rounded-md border border-gray-300"
-            />
-
-            {/* Theme Picker */}
-            <select
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              className="p-2 rounded-md border border-gray-300"
-            >
-              {themes.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-
-            <button
-              type="submit"
-              className="px-6 py-2 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition"
-            >
-              Update Profile
-            </button>
-            {message && <p className="mt-2 text-sm text-yellow-200">{message}</p>}
-          </form>
-
-          {/* Account Details */}
-          <div className="bg-white bg-opacity-30 rounded-xl p-6 text-gray-100">
-            <h3 className="text-xl font-semibold mb-2 text-gray-200">Account Details</h3>
-            <p>
-              <span className="font-medium text-gray-100">Joined:</span>{" "}
-              {user?.createdAt ? new Date(user.createdAt).toDateString() : "N/A"}
-            </p>
-            <p>
-              <span className="font-medium text-gray-100">Mood Entries:</span>{" "}
-              {user?.journalCount || 0}
-            </p>
-            <p>
-              <span className="font-medium text-gray-100">Preferred Theme:</span> {theme}
-            </p>
-          </div>
+          <p className="text-[#7a6c57] text-sm mt-4">We are with you every step of the way.</p>
         </div>
+
+        {/* Mini Mood Chart */}
+        <div className="mb-4">
+          <h3 className="text-md font-medium text-[#7a6c57] mb-2 text-center">Last 7 Days Mood</h3>
+          {moodData.length > 0 && (
+            <ResponsiveContainer width="100%" height={80}>
+              <LineChart data={moodData}>
+                <Line type="monotone" dataKey="mood" stroke="#7a6c57" strokeWidth={3} dot={{ r: 4, fill: "#c9a17a" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
       </div>
     </div>
   );
