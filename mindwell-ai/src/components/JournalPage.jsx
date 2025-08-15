@@ -222,11 +222,7 @@ const JournalPage = () => {
                 />
 
                 {/* Info box below textarea */}
-                <div className="text-center">
-                  <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm shadow-sm mb-2">
-                    🔒 Your journal entries are securely stored and cannot be accessed by anyone else.
-                  </div>
-                </div>
+                
 
                 {errorMessage && (
                   <p className="text-red-500 text-sm">{errorMessage}</p>
@@ -273,6 +269,12 @@ const JournalPage = () => {
                     Analyse with AI
                   </button>
                 </div>
+                <div className="text-left">
+  <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm shadow-sm mb-2">
+    🔒 Your journal entries are securely stored and cannot be accessed by anyone else.
+  </div>
+</div>
+
               </form>
             </motion.div>
 
