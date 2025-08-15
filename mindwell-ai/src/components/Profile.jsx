@@ -103,7 +103,6 @@ useEffect(() => {
               <p><strong>Name:</strong> {profileData.name}</p>
               <p><strong>Email:</strong> {profileData.email}</p>
               <div className="mt-6 flex gap-3">
-                <Button onClick={() => navigate("/profile/edit")}>Edit Profile</Button>
                 <Button variant="ghost" onClick={logout}>Logout</Button>
               </div>
             </div>

@@ -30,6 +30,7 @@ const JournalPage = () => {
   const [aiResult, setAiResult] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [showLoginAlert, setShowLoginAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!user || !token) return;
@@ -56,8 +57,17 @@ const JournalPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
     if (!user || !token) return setShowLoginAlert(true);
-    if (!entry || !mood) return;
+    if (!entry.trim()) {
+      setErrorMessage("Please write something before saving.");
+      return;
+    }
+    if (!mood) {
+      setErrorMessage("Please select your current mood.");
+      return;
+    }
+
     const tempEntry = {
       id: Date.now(),
       text: entry,
@@ -69,6 +79,7 @@ const JournalPage = () => {
     setEntry("");
     setMood("");
     setAiResult(null);
+
     try {
       const res = await axios.post(
         "/api/journal",
@@ -105,50 +116,32 @@ const JournalPage = () => {
     }
   };
 
-// This function assumes it is inside a React component
-// with 'user', 'entry', 'token', 'setShowLoginAlert', and 'setAiResult' states/props.
-const handleAiAnalyze = async () => {
-  // Check for user and show a custom login alert if not authenticated
-  if (!user) {
-    return setShowLoginAlert(true);
-  }
+  const handleAiAnalyze = async () => {
+    if (!user) return setShowLoginAlert(true);
+    if (!entry.trim()) {
+      setErrorMessage("Please write something to analyze.");
+      return;
+    }
 
-  // Use a state variable or UI component to handle empty input instead of a blocking alert()
-  if (!entry.trim()) {
-    // You can set a state here to display a message to the user,
-    // for example: setErrorMessage("Please write something to analyze.");
-    console.error("Please write something to analyze.");
-    return;
-  }
+    setAiResult({ content: "Analyzing..." });
 
-  // Set initial state to indicate that the analysis is in progress
-  setAiResult({ mood: "Analyzing...", suggestions: [] });
+    try {
+      const res = await axios.post(
+        "/api/ai/analyze",
+        { journalText: entry },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-  try {
-    // Make the API call to your backend
-    const res = await axios.post(
-      "/api/ai/analyze",
-      { journalText: entry },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    // Update the state with the response from the AI
-    setAiResult({
-      mood: "AI Feedback",
-      // The backend returns a string, which we place in an array to match the suggestions state
-      suggestions: [res.data.aiMessage || "No response from AI"],
-    });
-  } catch (err) {
-    console.error("AI analysis failed:", err.response?.data || err.message);
-    setAiResult({
-      mood: "Error",
-      suggestions: ["AI analysis failed. Please try again later."],
-    });
-  }
-};
-
-
-
+      setAiResult({
+        content: res.data.aiMessage || "No response from AI",
+      });
+    } catch (err) {
+      console.error("AI analysis failed:", err.response?.data || err.message);
+      setAiResult({
+        content: "AI analysis failed. Please try again later.",
+      });
+    }
+  };
 
   const filteredEntries = selectedDate
     ? entries.filter((e) => e.dateOnly === selectedDate.toDateString())
@@ -227,15 +220,25 @@ const handleAiAnalyze = async () => {
                   onChange={(e) => setEntry(e.target.value)}
                   rows={5}
                 />
-                <p className="text-neutral-800 font-semibold">
-                  How are you feeling?
-                </p>
+
+                {/* Info box below textarea */}
+                <div className="text-center">
+                  <div className="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm shadow-sm mb-2">
+                    🔒 Your journal entries are securely stored and cannot be accessed by anyone else.
+                  </div>
+                </div>
+
+                {errorMessage && (
+                  <p className="text-red-500 text-sm">{errorMessage}</p>
+                )}
+
+                <p className="text-neutral-800 font-semibold">How are you feeling?</p>
                 <div className="flex gap-3 flex-wrap">
                   {moods.map((m) => (
                     <button
                       type="button"
                       key={m}
-                      onClick={() => setMood(m)}
+                      onClick={() => setMood(m === mood ? "" : m)} // toggle selection
                       className={`px-4 py-2 rounded-full border transition-all ${
                         mood === m
                           ? "bg-neutral-800 text-white border-neutral-800"
@@ -246,6 +249,7 @@ const handleAiAnalyze = async () => {
                     </button>
                   ))}
                 </div>
+
                 <div className="flex gap-4">
                   <button
                     type="submit"
@@ -279,18 +283,7 @@ const handleAiAnalyze = async () => {
                 variants={fadeUp}
                 className="bg-white/70 backdrop-blur-lg p-6 rounded-3xl shadow-sm border-l-4 border-neutral-400"
               >
-                <h2 className="text-xl font-bold text-neutral-900 mb-3">
-                  AI Mood Analysis
-                </h2>
-                <p className="mb-4">
-                  <strong>Mood:</strong> {aiResult.mood}
-                </p>
-                <h3 className="font-semibold mb-1">Suggestions:</h3>
-                <ul className="list-disc pl-5 space-y-1">
-                  {aiResult.suggestions.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
+                <p className="text-gray-800">{aiResult.content}</p>
               </motion.div>
             )}
           </div>
@@ -322,9 +315,7 @@ const handleAiAnalyze = async () => {
             </motion.div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-bold text-neutral-900">
-                Past Entries
-              </h3>
+              <h3 className="text-lg font-bold text-neutral-900">Past Entries</h3>
               {filteredEntries.length === 0 && (
                 <p className="text-neutral-700 text-sm">No entries found.</p>
               )}
@@ -338,9 +329,7 @@ const handleAiAnalyze = async () => {
                 >
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-2xl">{e.mood}</span>
-                    <span className="text-sm italic text-gray-500">
-                      {e.date}
-                    </span>
+                    <span className="text-sm italic text-gray-500">{e.date}</span>
                   </div>
                   <p className="text-gray-800">{e.text}</p>
                   {user && (
