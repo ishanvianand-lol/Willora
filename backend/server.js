@@ -2,12 +2,16 @@ import express from "express";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
+dotenv.config();
 
 // Import routes
 import authRoutes from "./routes/auth.js";
 import communityRoutes from "./routes/community.js";
+import journalRoutes from "./routes/journal.js";
+import statsRoutes from "./routes/stats.js";
+import aiRoutes from "./routes/ai.js";
 
-dotenv.config();
+
 const app = express();
 
 // Middleware
@@ -17,6 +21,9 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/community", communityRoutes);
+app.use("/api/journal", journalRoutes);
+app.use("/api/journals/stats", statsRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Default test route
 app.get("/", (req, res) => {

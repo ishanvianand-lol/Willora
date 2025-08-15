@@ -1,83 +1,61 @@
-import React, { useState } from 'react';
-import { sendMessageToAI } from '../../api/chatApi.js';
-import { Loader2, Send } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { sendMessageToAI } from "../../api/chatApi";
+import { motion } from "framer-motion";
+import BlobClay from "../components/assets/blob-clay.svg";
+import BlobSage from "../components/assets/blob-sage.svg";
+import PaperTexture from "../components/assets/beige-paper.png";
+import { useNavigate } from "react-router-dom";
 
-const AIChatPage = () => {
+export default function AIChatPage() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!localStorage.getItem("token")) navigate("/register");
+  }, [navigate]);
+
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hi! I'm here for you. How are you feeling toda y?" },
+    { sender: "bot", text: "Hi! I’m your Willora Assistant 🌿 How can I help you today?" }
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const chatEndRef = useRef(null);
 
-  const handleSend = async () => {
-    if (!inputMessage.trim()) return;
+  const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useEffect(scrollToBottom, [messages]);
 
-    const userMessage = { role: 'user', content: inputMessage };
-    setMessages((prev) => [...prev, userMessage]);
-    setInputMessage('');
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+    const userMsg = { sender: "user", text: input };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
     setLoading(true);
 
-    const aiReply = await sendMessageToAI(userMessage.content);
-
-    setMessages((prev) => [
-      ...prev,
-      { role: 'assistant', content: aiReply || 'Sorry, I didn’t get that.' },
-    ]);
+    const botReply = await sendMessageToAI(input);
+    setMessages((prev) => [...prev, { sender: "bot", text: botReply }]);
     setLoading(false);
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-pink-50 flex flex-col justify-between px-4 py-6">
-      <div className="text-center text-2xl font-bold text-pink-600 mb-4">
-        💬 MindwellAI Chat
-      </div>
+    <main className="relative min-h-screen flex flex-col bg-[#F4EDE3] text-neutral-800 overflow-hidden" style={{ backgroundImage: `url(${PaperTexture})`, backgroundRepeat: "repeat", backgroundSize: "auto" }}>
+      <motion.img src={BlobClay} className="absolute -top-32 -left-40 w-[28rem] opacity-30 pointer-events-none" animate={{ y: [0, 20, 0] }} transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }} />
+      <motion.img src={BlobSage} className="absolute bottom-0 -right-40 w-[30rem] opacity-30 pointer-events-none" animate={{ y: [0, -15, 0] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} />
 
-      {/* Message Display */}
-      <div className="flex-1 overflow-y-auto max-h-[75vh] space-y-4 px-2">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`max-w-md rounded-xl px-4 py-3 text-sm whitespace-pre-wrap shadow-md ${
-              msg.role === 'user'
-                ? 'bg-pink-200 self-end ml-auto text-right'
-                : 'bg-white self-start mr-auto text-gray-800'
-            }`}
-          >
-            {msg.content}
-          </div>
-        ))}
-        {loading && (
-          <div className="text-gray-400 text-sm italic animate-pulse ml-2">AI is typing...</div>
-        )}
+      <div className="relative w-full max-w-3xl mx-auto flex flex-col flex-1 rounded-3xl border border-neutral-200 bg-white/90 backdrop-blur-sm shadow-lg overflow-hidden z-10 mt-8 mb-8">
+        <div className="p-5 border-b border-neutral-200 bg-white/60 backdrop-blur-sm font-serif text-lg">💬 Willora Assistant</div>
+        <div className="flex-1 p-5 overflow-y-auto space-y-4">
+          {messages.map((msg, idx) => (
+            <motion.div key={idx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className={`max-w-[80%] px-4 py-2 rounded-2xl shadow-sm ${msg.sender === "user" ? "bg-[#E8D9CF] ml-auto" : "bg-neutral-100"}`}>
+              {msg.text}
+            </motion.div>
+          ))}
+          {loading && <div className="flex items-center gap-1 text-sm text-neutral-500 italic"><span className="animate-bounce">●</span><span className="animate-bounce delay-100">●</span><span className="animate-bounce delay-200">●</span></div>}
+          <div ref={chatEndRef} />
+        </div>
+        <div className="p-4 border-t border-neutral-200 flex gap-2 bg-white/60 backdrop-blur-sm">
+          <input type="text" className="flex-1 border border-neutral-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-neutral-400" placeholder="Type your message..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} />
+          <button onClick={sendMessage} disabled={loading} className="px-4 py-2 rounded-xl bg-neutral-800 text-white hover:bg-neutral-700 disabled:opacity-50">Send</button>
+        </div>
       </div>
-
-      {/* Input */}
-      <div className="mt-6 flex items-center gap-2">
-        <textarea
-          rows={1}
-          value={inputMessage}
-          onChange={(e) => setInputMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type how you're feeling..."
-          className="flex-1 p-3 rounded-full border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-pink-400 bg-white resize-none"
-        />
-        <button
-          onClick={handleSend}
-          disabled={loading || !inputMessage.trim()}
-          className="bg-pink-500 text-white p-3 rounded-full hover:bg-pink-600 disabled:opacity-50 transition"
-        >
-          {loading ? <Loader2 className="animate-spin h-5 w-5" /> : <Send className="h-5 w-5" />}
-        </button>
-      </div>
-    </div>
+    </main>
   );
-};
-
-export default AIChatPage;
+}

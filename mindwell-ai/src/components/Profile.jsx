@@ -22,29 +22,40 @@ export default function ProfilePage() {
   const [stats, setStats] = useState({ totalEntries: 0, streak: 0, averageMood: 0, communityPosts: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!user || !token) {
-      navigate("/login");
-      return;
+useEffect(() => {
+  if (!user || !token) {
+    navigate("/login");
+    return;
+  }
+
+  const fetchProfileStats = async () => {
+    try {
+      // Call the new stats endpoint that returns name, email, and all stats
+      const res = await axios.get("/api/journals/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Populate profile data
+      setProfileData({ name: res.data.name, email: res.data.email });
+
+      // Populate stats
+      setStats({
+        totalEntries: res.data.totalEntries,
+        streak: res.data.streak,
+        averageMood: res.data.averageMood,
+        communityPosts: res.data.communityPosts,
+      });
+
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
     }
+  };
 
-    const fetchProfile = async () => {
-      try {
-        const profileRes = await axios.get("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } });
-        setProfileData({ name: profileRes.data.name, email: profileRes.data.email });
+  fetchProfileStats();
+}, [user, token, navigate]);
 
-        const statsRes = await axios.get("/api/journals/stats", { headers: { Authorization: `Bearer ${token}` } });
-        setStats(statsRes.data);
-
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user, token, navigate]);
 
   if (loading) return <p className="text-center mt-20">Loading...</p>;
 
