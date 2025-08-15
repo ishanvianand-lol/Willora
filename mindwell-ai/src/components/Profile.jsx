@@ -1,245 +1,123 @@
-import React, { useContext, useState, useEffect } from "react";
-import AuthContext from "../context/AuthContext.jsx";
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import axios from "axios";
+import AuthContext from "../context/AuthContext.jsx";
+import Button from "../components/ui/Button.jsx";
 
-const themes = ["Earthy", "Rosy", "Dark", "Light"];
+import BlobClay from "../components/assets/blob-clay.svg";
+import BlobSage from "../components/assets/blob-sage.svg";
+import PaperTexture from "../components/assets/beige-paper.png";
 
-const Profile = () => {
-  const { user, setUser, token } = useContext(AuthContext);
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
 
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [dob, setDob] = useState(user?.dob || "");
-  const [theme, setTheme] = useState(user?.theme || "Earthy");
-  const [message, setMessage] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [moodData, setMoodData] = useState([]);
-  const [loading, setLoading] = useState(false);
+export default function ProfilePage() {
+  const { user, token, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    setName(user?.name || "");
-    setEmail(user?.email || "");
-    setDob(user?.dob || "");
-    setTheme(user?.theme || "Earthy");
-  }, [user]);
+  const [profileData, setProfileData] = useState({ name: "", email: "" });
+  const [stats, setStats] = useState({ totalEntries: 0, streak: 0, averageMood: 0, communityPosts: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMood = async () => {
-      if (!token) return;
-      try {
-        const res = await axios.get("/api/journal/moods", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        let data = res.data;
-        if (!Array.isArray(data)) {
-          data = Object.entries(data).map(([date, mood]) => ({ date, mood }));
-        }
-        setMoodData(data);
-      } catch (err) {
-        console.error("Error fetching mood data", err);
-      }
-    };
-    fetchMood();
-  }, [token]);
-
-  const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-
-    if (!token) {
-      setMessage("Update failed: No authentication token found.");
-      setLoading(false);
+    if (!user || !token) {
+      navigate("/login");
       return;
     }
 
-    try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("email", email);
-      formData.append("dob", dob);
-      formData.append("theme", theme);
-      if (selectedFile) formData.append("avatar", selectedFile);
+    const fetchProfile = async () => {
+      try {
+        const profileRes = await axios.get("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+        setProfileData({ name: profileRes.data.name, email: profileRes.data.email });
 
-      const res = await axios.put("/api/auth/update", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUser(res.data.user);
-      setMessage("Profile updated successfully! 🎉");
-    } catch (err) {
-      if (err.response) {
-        setMessage(err.response.data.message || "Update failed due to server error. 😔");
-      } else if (err.request) {
-        setMessage("Update failed: No response from server. 🌐");
-      } else {
-        setMessage("Update failed: Unexpected error 😔");
+        const statsRes = await axios.get("/api/journals/stats", { headers: { Authorization: `Bearer ${token}` } });
+        setStats(statsRes.data);
+
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
       }
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const getThemeColors = (currentTheme) => {
-    switch (currentTheme) {
-      case "Earthy":
-        return {
-          bg: "bg-stone-100",
-          text: "text-stone-800",
-          accent: "bg-yellow-700",
-          accentText: "text-white",
-          border: "border-stone-300",
-          inputBg: "bg-white",
-        };
-      case "Rosy":
-        return {
-          bg: "bg-rose-50",
-          text: "text-rose-800",
-          accent: "bg-rose-500",
-          accentText: "text-white",
-          border: "border-rose-300",
-          inputBg: "bg-white",
-        };
-      case "Dark":
-        return {
-          bg: "bg-gray-800",
-          text: "text-gray-100",
-          accent: "bg-teal-500",
-          accentText: "text-white",
-          border: "border-gray-700",
-          inputBg: "bg-gray-700",
-        };
-      case "Light":
-        return {
-          bg: "bg-white",
-          text: "text-gray-800",
-          accent: "bg-blue-500",
-          accentText: "text-white",
-          border: "border-gray-200",
-          inputBg: "bg-gray-100",
-        };
-      default:
-        return {
-          bg: "bg-stone-100",
-          text: "text-stone-800",
-          accent: "bg-yellow-700",
-          accentText: "text-white",
-          border: "border-stone-300",
-          inputBg: "bg-white",
-        };
-    }
-  };
+    fetchProfile();
+  }, [user, token, navigate]);
 
-  const colors = getThemeColors(theme);
+  if (loading) return <p className="text-center mt-20">Loading...</p>;
 
   return (
-    <div className={`min-h-screen ${colors.bg} p-6 flex items-center justify-center`}>
-      <div className={`w-full max-w-lg ${colors.bg} rounded-3xl shadow-xl p-8 transform transition-transform duration-300 hover:scale-[1.01]`}>
-        {/* Profile Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="relative w-32 h-32 rounded-full border-4 border-dashed border-gray-400 p-2 mb-4 group cursor-pointer">
-            <img
-              src={selectedFile ? URL.createObjectURL(selectedFile) : (user?.avatar || "https://picsum.photos/200")}
-              alt="User Avatar"
-              className="w-full h-full object-cover rounded-full transition-opacity duration-300"
-            />
-            <label
-              htmlFor="avatar-upload"
-              className="absolute inset-0 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-900 bg-opacity-50 cursor-pointer"
-            >
-              <span className="text-white text-2xl font-bold">✎</span>
-              <input
-                id="avatar-upload"
-                type="file"
-                onChange={handleFileChange}
-                className="hidden"
-                accept="image/*"
-              />
-            </label>
-          </div>
-          <h2 className={`text-4xl font-bold ${colors.text} text-center`}>{name || "Your Name"}</h2>
-          <p className={`text-sm ${colors.text} opacity-70`}>{email || "email@example.com"}</p>
-        </div>
+    <main className="relative bg-[#F4EDE3] text-neutral-800 overflow-x-hidden min-h-screen">
+      {/* Paper texture overlay */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `url(${PaperTexture})`,
+          backgroundRepeat: "repeat",
+          opacity: 0.06,
+        }}
+      />
 
-        {/* Profile Update Form */}
-        <form onSubmit={handleUpdate} className="space-y-6">
-          <div>
-            <label htmlFor="name" className={`block text-sm font-medium mb-1 ${colors.text}`}>Name</label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl ${colors.inputBg} ${colors.text} ${colors.border} border outline-none focus:border-yellow-700 transition-colors duration-200`}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="email" className={`block text-sm font-medium mb-1 ${colors.text}`}>Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl ${colors.inputBg} ${colors.text} ${colors.border} border outline-none focus:border-yellow-700 transition-colors duration-200`}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="dob" className={`block text-sm font-medium mb-1 ${colors.text}`}>Date of Birth</label>
-            <input
-              id="dob"
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl ${colors.inputBg} ${colors.text} ${colors.border} border outline-none focus:border-yellow-700 transition-colors duration-200`}
-            />
-          </div>
-          <div>
-            <label htmlFor="theme" className={`block text-sm font-medium mb-1 ${colors.text}`}>Theme</label>
-            <select
-              id="theme"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              className={`w-full px-4 py-3 rounded-xl ${colors.inputBg} ${colors.text} ${colors.border} border outline-none focus:border-yellow-700 transition-colors duration-200 appearance-none`}
-            >
-              {themes.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+      {/* Floating blobs */}
+      <motion.img
+        src={BlobClay}
+        alt=""
+        className="absolute -top-32 -left-32 w-96 opacity-30"
+        animate={{ y: [0, 20, 0] }}
+        transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.img
+        src={BlobSage}
+        alt=""
+        className="absolute top-1/2 -right-40 w-[28rem] opacity-30"
+        animate={{ y: [0, -15, 0] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+      />
+
+      <section className="relative z-10 mx-auto max-w-7xl px-6 md:px-10 lg:px-12 py-28">
+        <motion.div initial="hidden" animate="visible" variants={fadeUp}>
+          <h1 className="font-serif text-5xl lg:text-6xl font-semibold mb-6">
+            Welcome, {profileData.name}!
+          </h1>
+          <p className="max-w-2xl text-lg mb-8">
+            Here’s a snapshot of your journaling journey and community activity.
+          </p>
+
+          {/* Profile Info Card */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <div className="bg-white rounded-3xl p-8 shadow-md border border-neutral-200">
+              <h2 className="font-semibold text-2xl mb-4">Your Info</h2>
+              <p><strong>Name:</strong> {profileData.name}</p>
+              <p><strong>Email:</strong> {profileData.email}</p>
+              <div className="mt-6 flex gap-3">
+                <Button onClick={() => navigate("/profile/edit")}>Edit Profile</Button>
+                <Button variant="ghost" onClick={logout}>Logout</Button>
+              </div>
+            </div>
+
+            {/* Stats Card */}
+            <div className="bg-white rounded-3xl p-8 shadow-md border border-neutral-200">
+              <h2 className="font-semibold text-2xl mb-4">Your Stats</h2>
+              <p><strong>Total Entries:</strong> {stats.totalEntries}</p>
+              <p><strong>Current Streak:</strong> {stats.streak} days</p>
+              <p><strong>Average Mood:</strong> {stats.averageMood}</p>
+              <p><strong>Community Posts:</strong> {stats.communityPosts}</p>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-3 rounded-xl font-semibold text-lg ${colors.accent} ${colors.accentText} hover:opacity-80 transition-opacity duration-300 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {loading ? "Updating..." : "Update Profile"}
-          </button>
-          {message && <p className={`mt-4 text-center text-sm ${colors.text}`}>{message}</p>}
-        </form>
-
-        {/* Account Details */}
-        <div className={`mt-8 pt-6 ${colors.border} border-t-2 border-dashed`}>
-          <h3 className={`text-xl font-bold ${colors.text} mb-4`}>Account Details</h3>
-          <div className="space-y-2">
-            <p className={`${colors.text} text-sm flex items-center gap-2`}>
-              <span className="font-medium">Joined:</span>{" "}
-              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-IN") : "N/A"}
-            </p>
-            <p className={`${colors.text} text-sm flex items-center gap-2`}>
-              <span className="font-medium">Mood Entries:</span> {user?.journalCount || 0}
-            </p>
-            <p className={`${colors.text} text-sm flex items-center gap-2`}>
-              <span className="font-medium">Preferred Theme:</span> {theme}
-            </p>
+          {/* CTA Section */}
+          <div className="bg-white rounded-3xl p-10 shadow-md border border-neutral-200 relative overflow-hidden">
+            <h3 className="font-serif text-3xl mb-4">Keep journaling daily!</h3>
+            <p className="mb-6">One small entry at a time builds a meaningful habit.</p>
+            <div className="flex gap-3">
+              <Button onClick={() => navigate("/journal")}>New Journal Entry</Button>
+              <Button variant="ghost" onClick={() => navigate("/community")}>Visit Community</Button>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </section>
+    </main>
   );
-};
-
-export default Profile;
+}

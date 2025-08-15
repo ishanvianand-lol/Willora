@@ -11,16 +11,15 @@ const CommunityPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [commentInputs, setCommentInputs] = useState({});
-  const [commentAnonymous, setCommentAnonymous] = useState({});
   const [activeCommentId, setActiveCommentId] = useState(null);
   const [loginAlert, setLoginAlert] = useState(false);
 
-  // Fetch posts
+  // -------------------- Fetch posts --------------------
   const fetchPosts = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/community");
       const data = await res.json();
-      const formatted = data.map(post => ({ ...post, id: post._id }));
+      const formatted = data.map((post) => ({ ...post, id: post._id }));
       setPosts(formatted);
     } catch (err) {
       console.error("Error fetching posts:", err);
@@ -31,7 +30,7 @@ const CommunityPage = () => {
     fetchPosts();
   }, []);
 
-  // Post a new thought
+  // -------------------- Post a new post --------------------
   const handlePostSubmit = async (anonymous) => {
     if (!user) {
       setLoginAlert(true);
@@ -53,7 +52,7 @@ const CommunityPage = () => {
       if (!res.ok) throw new Error("Failed to post");
 
       const newPost = await res.json();
-      setPosts(prev => [{ ...newPost, id: newPost._id }, ...prev]);
+      setPosts((prev) => [{ ...newPost, id: newPost._id }, ...prev]);
       setNewPostContent("");
       setShowModal(false);
     } catch (err) {
@@ -64,91 +63,105 @@ const CommunityPage = () => {
     }
   };
 
-  // Submit a comment
+  // -------------------- Submit a comment --------------------
   const handleCommentSubmit = async (postId) => {
     if (!user) {
       setLoginAlert(true);
       return;
     }
 
-    const content = commentInputs[postId];
-    if (!content || !content.trim()) return;
+    const inputData = commentInputs[postId] || { text: "", anonymous: false };
+    const { text, anonymous } = inputData;
+    if (!text.trim()) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/community/${postId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: content.trim(),
-          postedBy: commentAnonymous[postId] ? "Anonymous" : user.name
-        }),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/community/${postId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: text.trim(),
+            postedBy: anonymous ? "Anonymous" : user.name,
+          }),
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to post comment");
 
       const newComment = await res.json();
 
-      setPosts(prev =>
-        prev.map(post =>
+      setPosts((prev) =>
+        prev.map((post) =>
           post.id === postId
             ? { ...post, comments: [...post.comments, newComment] }
             : post
         )
       );
-      setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+
+      setCommentInputs((prev) => ({
+        ...prev,
+        [postId]: { text: "", anonymous: prev[postId]?.anonymous || false },
+      }));
     } catch (err) {
       console.error(err);
       alert(err.message);
     }
   };
 
-  // Delete a post (time-limited)
+  // -------------------- Delete a post --------------------
   const handleDeletePost = async (postId) => {
     if (!user) {
       setLoginAlert(true);
       return;
     }
+
     try {
-      const res = await fetch(`http://localhost:5000/api/community/${postId}`, {
+      await fetch(`http://localhost:5000/api/community/${postId}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data.error || "Failed to delete");
-        return;
-      }
-      setPosts(posts.filter(post => post.id !== postId));
+      setPosts((prev) => prev.filter((post) => post._id !== postId));
     } catch (err) {
       console.error(err);
       alert("Failed to delete post");
     }
   };
 
-  // Like a post
-  const handleLike = async (postId) => {
+  // -------------------- Toggle comment input --------------------
+  const toggleCommentInput = (postId) => {
+    setActiveCommentId(activeCommentId === postId ? null : postId);
+  };
+
+  // -------------------- Handle upvote --------------------
+  const handleUpvote = async (postId) => {
     if (!user) {
       setLoginAlert(true);
       return;
     }
+
     try {
-      const res = await fetch(`http://localhost:5000/api/community/${postId}/like`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user._id }),
-      });
-      const data = await res.json();
-      setPosts(prev =>
-        prev.map(post =>
-          post.id === postId ? { ...post, likes: data.likes } : post
+      const res = await fetch(
+        `http://localhost:5000/api/community/${postId}/upvote`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user?.username || "Anonymous" }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to upvote");
+
+      const updatedPost = await res.json();
+
+      setPosts((prev) =>
+        prev.map((post) =>
+          post._id === postId ? { ...post, likes: updatedPost.likes } : post
         )
       );
     } catch (err) {
       console.error(err);
+      alert(err.message);
     }
-  };
-
-  const toggleCommentInput = (postId) => {
-    setActiveCommentId(activeCommentId === postId ? null : postId);
   };
 
   return (
@@ -182,19 +195,21 @@ const CommunityPage = () => {
                 No thoughts shared yet. Be the first to post!
               </p>
             ) : (
-              posts.map(post => (
+              posts.map((post) => (
                 <div
                   key={post.id}
                   className="backdrop-blur-lg bg-[#e9e0cf]/90 p-6 rounded-2xl shadow-xl border border-[#c9a17a] hover:scale-[1.01] transition-transform"
                 >
-                  <p className="text-[#5c4a3f] text-lg leading-relaxed">{post.content}</p>
+                  <p className="text-[#5c4a3f] text-lg leading-relaxed">
+                    {post.content}
+                  </p>
                   <p className="text-[#7a6c57] text-xs mt-2 italic">
                     {post.timestamp} — <strong>{post.postedBy}</strong>
                   </p>
 
                   <div className="mt-4 flex items-center space-x-4">
                     <button
-                      onClick={() => handleLike(post.id)}
+                      onClick={() => handleUpvote(post.id)}
                       className="flex items-center gap-1 px-3 py-1 bg-[#d8c5a1] rounded-full text-[#7a6c57] hover:bg-[#c9a17a] transition"
                     >
                       👍 <span>{post.likes}</span>
@@ -205,56 +220,100 @@ const CommunityPage = () => {
                     >
                       💬 <span>{post.comments.length}</span>
                     </button>
-                    {user && post.postedBy === user.name && (
-                      <button
-                        onClick={() => handleDeletePost(post._id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
-                      >
-                        Delete
-                      </button>
-                    )}
+                    {user &&
+                      post.postedBy !== "Anonymous" &&
+                      post.postedBy === user.name && (
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
+                        >
+                          Delete
+                        </button>
+                      )}
                   </div>
 
                   {activeCommentId === post.id && (
                     <div className="mt-4 border-t border-[#c9a17a] pt-4 space-y-4">
                       {post.comments.length > 0 && (
                         <div className="space-y-2">
-                          {post.comments.map(comment => (
-                            <div key={comment._id || comment.id} className="p-3 bg-[#f2e8d5] rounded-lg">
+                          {post.comments.map((comment) => (
+                            <div
+                              key={comment._id || comment.id}
+                              className="p-3 bg-[#f2e8d5] rounded-lg"
+                            >
                               <p className="text-[#5c4a3f] text-sm">
-                                {comment.content} — <strong>{comment.postedBy}</strong>
+                                {comment.content} —{" "}
+                                <strong>{comment.postedBy}</strong>
                               </p>
-                              <p className="text-[#7a6c57] text-xs italic">{comment.timestamp}</p>
+                              <p className="text-[#7a6c57] text-xs italic">
+                                {comment.timestamp}
+                              </p>
                             </div>
                           ))}
                         </div>
                       )}
-                      <div className="flex gap-2 items-center">
+                      {/* Comment Input with Toggle */}
+                      <div className="flex flex-col gap-2">
                         <textarea
                           className="flex-grow p-2 border border-[#c9a17a] rounded-lg text-sm resize-none text-[#5c4a3f]"
                           rows="1"
                           placeholder="Write a comment..."
-                          value={commentInputs[post.id] || ""}
+                          value={commentInputs[post.id]?.text || ""}
                           onChange={(e) =>
-                            setCommentInputs({ ...commentInputs, [post.id]: e.target.value })
+                            setCommentInputs({
+                              ...commentInputs,
+                              [post.id]: {
+                                ...(commentInputs[post.id] || {
+                                  text: "",
+                                  anonymous: false,
+                                }),
+                                text: e.target.value,
+                              },
+                            })
                           }
                         />
-                        <label className="flex items-center gap-1 text-xs text-[#7a6c57]">
-                          <input
-                            type="checkbox"
-                            checked={commentAnonymous[post.id] || false}
-                            onChange={(e) =>
-                              setCommentAnonymous({ ...commentAnonymous, [post.id]: e.target.checked })
-                            }
-                          />
-                          Anonymous
-                        </label>
-                        <button
-                          onClick={() => handleCommentSubmit(post.id)}
-                          className="px-4 py-2 bg-[#7a6c57] text-white rounded-lg font-semibold hover:bg-[#635843] transition"
-                        >
-                          Send
-                        </button>
+                        <div className="flex items-center justify-between">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <span className="text-[#7a6c57] text-sm">
+                              Post Anonymously
+                            </span>
+                            <div
+                              onClick={() =>
+                                setCommentInputs({
+                                  ...commentInputs,
+                                  [post.id]: {
+                                    ...(commentInputs[post.id] || {
+                                      text: "",
+                                      anonymous: false,
+                                    }),
+                                    anonymous: !(
+                                      commentInputs[post.id]?.anonymous || false
+                                    ),
+                                  },
+                                })
+                              }
+                              className={`w-10 h-5 flex items-center rounded-full p-1 transition ${
+                                commentInputs[post.id]?.anonymous
+                                  ? "bg-[#7a6c57]"
+                                  : "bg-gray-300"
+                              }`}
+                            >
+                              <div
+                                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition ${
+                                  commentInputs[post.id]?.anonymous
+                                    ? "translate-x-5"
+                                    : ""
+                                }`}
+                              ></div>
+                            </div>
+                          </label>
+                          <button
+                            onClick={() => handleCommentSubmit(post.id)}
+                            className="px-4 py-2 bg-[#7a6c57] text-white rounded-lg font-semibold hover:bg-[#635843] transition"
+                          >
+                            Send
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -269,12 +328,14 @@ const CommunityPage = () => {
         </footer>
       </div>
 
-      {/* Modal */}
+      {/* Post Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm z-50 animate-fadeIn">
           <div className="w-full max-w-lg bg-[#e9e0cf]/95 rounded-3xl shadow-2xl p-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-[#7a6c57]">Share a Thought</h2>
+              <h2 className="text-2xl font-bold text-[#7a6c57]">
+                Share a Thought
+              </h2>
               <button
                 onClick={() => setShowModal(false)}
                 className="text-[#7a6c57] hover:text-[#5c4a3f]"

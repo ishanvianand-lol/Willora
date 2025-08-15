@@ -7,7 +7,6 @@ import JournalPage from '../src/components/JournalPage';
 import InsightsPage from '../src/components/InsightsPage';
 import CommunityPage from '../src/components/CommunityPage';
 import Profile from '../src/components/Profile';
-import Dashboard from "../src/components/Dashboard";
 import AIChatPage from '../src/components/AIChatPage';
 import ScrollProgress from "../src/components/ScrollProgress";
 import { AuthProvider } from "./context/AuthContext";
@@ -28,7 +27,6 @@ function App() {
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/chat" element={<AIChatPage />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </div>
       </Router>

@@ -61,11 +61,11 @@ export default function HomePage() {
                 and uncover patterns you can feel good about.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button onClick={() => navigate(isLoggedIn ? "/dashboard" : "/register")}>
-                  {isLoggedIn ? "Go to Dashboard" : "Start Free"}
+                <Button onClick={() => navigate(isLoggedIn ? "/profile" : "/register")}>
+                  {isLoggedIn ? "Go to Profile" : "Get Started for Free"}
                 </Button>
                 <Button variant="ghost" className="border-neutral-400 text-neutral-800" onClick={() => navigate("/journal")}>
-                  Try a quick entry
+                  Journal A Thought
                 </Button>
               </div>
             </motion.div>
@@ -80,7 +80,7 @@ export default function HomePage() {
             >
               <div className="relative aspect-[4/3] rounded-3xl overflow-hidden border border-neutral-200 shadow-sm group">
                 <img
-                  src="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1600&auto=format&fit=crop"
+                  src="https://images.unsplash.com/photo-1694861786917-b53dd8a86ea6?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                   alt="Mindful moment"
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-1"
                   style={{ filter: "brightness(0.95) sepia(0.05) hue-rotate(-10deg)" }}
@@ -129,14 +129,14 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-6 md:px-10 lg:px-12 py-16 md:py-24 space-y-16">
           {[
             {
-              img: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1600&auto=format&fit=crop",
+              img: "https://images.unsplash.com/photo-1614983645583-e26256eb2c24?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
               title: "Journal that feels natural",
               desc: "Prompts when you want them. Quiet when you don’t. Write the way you think.",
               btn: { text: "Open the editor", link: "/journal" },
               imgFirst: true,
             },
             {
-              img: "https://images.unsplash.com/photo-1529336953121-d7b3d38a4b86?q=80&w=1600&auto=format&fit=crop",
+              img: "https://images.unsplash.com/photo-1604187234193-328daef1f962?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
               title: "See what lifts you",
               desc: "Mood over time, gently summarized. No dashboards that make you feel like a spreadsheet.",
               btn: { text: "View insights", link: "/insights" },
@@ -223,8 +223,8 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Button onClick={() => navigate(isLoggedIn ? "/dashboard" : "/register")}>
-                  {isLoggedIn ? "Open Dashboard" : "Create your space"}
+                <Button onClick={() => navigate(isLoggedIn ? "/profile" : "/register")}>
+                  {isLoggedIn ? "Open Profile" : "Create your space"}
                 </Button>
                 <Button variant="ghost" className="border-neutral-400 text-neutral-800" onClick={() => navigate("/community")}>
                   Peek at the community

@@ -3,9 +3,6 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import cors from "cors";
 
-import dashboardRoutes from "./routes/dashboard.js";
-app.use("/api/dashboard", dashboardRoutes);
-
 // Import routes
 import authRoutes from "./routes/auth.js";
 import communityRoutes from "./routes/community.js";
